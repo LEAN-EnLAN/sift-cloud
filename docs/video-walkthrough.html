@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Sift — Walkthrough de video</title>
+  <style>
+    :root {
+      --bg: #070908;
+      --panel: #101411;
+      --panel-2: #141a16;
+      --line: #243029;
+      --line-soft: #1a221d;
+      --text: #e8efe9;
+      --muted: #91a097;
+      --faint: #5b665f;
+      --accent: #22f5a7;
+      --accent-soft: rgba(34, 245, 167, 0.14);
+      --amber: #e8c36a;
+      --red: #ff7a7a;
+      --blue: #7dcfff;
+      --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      background:
+        radial-gradient(circle at 78% 0%, rgba(34,245,167,.11), transparent 28rem),
+        radial-gradient(circle at 0% 30%, rgba(125,207,255,.055), transparent 24rem),
+        linear-gradient(rgba(34,245,167,.028) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(34,245,167,.028) 1px, transparent 1px),
+        var(--bg);
+      background-size: auto, auto, 28px 28px, 28px 28px, auto;
+      color: var(--text);
+      font-family: var(--sans);
+      line-height: 1.55;
+    }
+
+    a { color: inherit; text-decoration: none; }
+    .shell { display: grid; grid-template-columns: 280px minmax(0, 1fr); min-height: 100vh; }
+    nav {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      padding: 28px 20px;
+      border-right: 1px solid var(--line-soft);
+      background: rgba(7,9,8,.82);
+      backdrop-filter: blur(12px);
+      overflow: auto;
+    }
+    nav .brand { margin-bottom: 22px; }
+    .kicker {
+      font-family: var(--mono);
+      color: var(--accent);
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .16em;
+      margin-bottom: 8px;
+    }
+    nav h1 { font-size: 20px; line-height: 1.1; margin: 0 0 8px; letter-spacing: -.03em; }
+    nav p { color: var(--muted); font-size: 12px; margin: 0; }
+    nav ul { list-style: none; padding: 0; margin: 22px 0 0; display: grid; gap: 7px; }
+    nav a {
+      display: block;
+      padding: 8px 9px;
+      border: 1px solid transparent;
+      border-radius: 3px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+    nav a:hover { border-color: var(--line); color: var(--text); background: rgba(255,255,255,.025); }
+
+    main { padding: 46px; max-width: 1160px; width: 100%; }
+    .hero {
+      padding: 34px;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(16,20,17,.92), rgba(10,13,11,.88));
+      border-radius: 4px;
+      box-shadow: 0 24px 80px rgba(0,0,0,.28);
+      margin-bottom: 22px;
+      position: relative;
+      overflow: hidden;
+    }
+    .hero:before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(90deg, transparent, rgba(34,245,167,.07), transparent);
+      transform: translateX(-70%);
+      opacity: .55;
+    }
+    .hero > * { position: relative; }
+    .hero h2 {
+      font-size: clamp(44px, 7vw, 82px);
+      line-height: .9;
+      letter-spacing: -.07em;
+      margin: 8px 0 14px;
+    }
+    .hero .subtitle {
+      max-width: 840px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 15px;
+      margin: 0 0 22px;
+    }
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; }
+    .badge {
+      font-family: var(--mono);
+      font-size: 11px;
+      color: var(--muted);
+      border: 1px solid var(--line);
+      background: rgba(0,0,0,.18);
+      padding: 6px 8px;
+      border-radius: 3px;
+      white-space: nowrap;
+    }
+    .badge.green { color: var(--accent); border-color: rgba(34,245,167,.35); background: var(--accent-soft); }
+
+    section {
+      margin: 22px 0;
+      padding: 26px;
+      border: 1px solid var(--line-soft);
+      border-radius: 4px;
+      background: rgba(16,20,17,.82);
+    }
+    .section-head { display: flex; align-items: start; gap: 14px; margin-bottom: 18px; }
+    .num {
+      flex: 0 0 auto;
+      font-family: var(--mono);
+      color: var(--accent);
+      border: 1px solid rgba(34,245,167,.35);
+      background: var(--accent-soft);
+      width: 34px;
+      height: 34px;
+      display: grid;
+      place-items: center;
+      border-radius: 3px;
+      font-size: 12px;
+    }
+    h3 { margin: 0; font-size: 25px; letter-spacing: -.035em; line-height: 1.05; }
+    .lead { color: var(--muted); margin: 8px 0 0; max-width: 860px; }
+    .grid { display: grid; gap: 14px; }
+    .grid.two { grid-template-columns: repeat(2, minmax(0,1fr)); }
+    .grid.three { grid-template-columns: repeat(3, minmax(0,1fr)); }
+    .card {
+      border: 1px solid var(--line);
+      background: rgba(7,9,8,.55);
+      border-radius: 4px;
+      padding: 17px;
+    }
+    .card h4 {
+      margin: 0 0 8px;
+      font-size: 15px;
+      font-family: var(--mono);
+      color: var(--text);
+    }
+    .card p { margin: 0; color: var(--muted); font-size: 14px; }
+    ul.clean { padding-left: 0; list-style: none; margin: 0; display: grid; gap: 8px; }
+    ul.clean li { color: var(--muted); font-size: 14px; display: flex; gap: 8px; }
+    ul.clean li:before { content: "→"; color: var(--accent); font-family: var(--mono); }
+    .terminal {
+      font-family: var(--mono);
+      background: #050605;
+      border: 1px solid var(--line);
+      color: #cdd8d0;
+      padding: 15px;
+      border-radius: 4px;
+      overflow: auto;
+      font-size: 13px;
+      line-height: 1.5;
+      white-space: pre-wrap;
+    }
+    .terminal .cmd, .cmd { color: var(--accent); }
+    .terminal .comment { color: var(--faint); }
+    .diagram {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0,1fr));
+      gap: 9px;
+      margin-top: 14px;
+    }
+    .step {
+      border: 1px dashed var(--line);
+      background: rgba(0,0,0,.18);
+      padding: 12px;
+      border-radius: 3px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+      min-height: 72px;
+    }
+    .step strong { color: var(--text); display: block; margin-bottom: 4px; }
+    .cue {
+      margin-top: 14px;
+      border-left: 2px solid var(--accent);
+      padding: 12px 14px;
+      background: rgba(34,245,167,.06);
+      color: #dce8df;
+      font-size: 14px;
+    }
+    .cue strong { color: var(--accent); font-family: var(--mono); font-size: 12px; text-transform: uppercase; letter-spacing: .08em; display: block; margin-bottom: 4px; }
+    .formula {
+      color: #dfe9e2;
+      font-family: var(--mono);
+      background: rgba(0,0,0,.25);
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      padding: 18px;
+      white-space: pre-wrap;
+      overflow: auto;
+    }
+    .example h4 { color: var(--accent); }
+    .pill-row { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; }
+    .pill { font-family:var(--mono); font-size:11px; border:1px solid var(--line); color:var(--muted); padding:5px 7px; border-radius:999px; }
+    .warn { color: var(--amber); }
+    .ok { color: var(--accent); }
+    .recording {
+      border-color: rgba(34,245,167,.4);
+      background: linear-gradient(180deg, rgba(34,245,167,.08), rgba(16,20,17,.72));
+    }
+    .small { font-size: 12px; color: var(--faint); font-family: var(--mono); }
+    .divider { height:1px; background:var(--line-soft); margin:18px 0; }
+
+    @media (max-width: 920px) {
+      .shell { grid-template-columns: 1fr; }
+      nav { position: relative; height: auto; border-right: 0; border-bottom: 1px solid var(--line-soft); }
+      main { padding: 22px; }
+      .grid.two, .grid.three, .diagram { grid-template-columns: 1fr; }
+      .hero { padding: 24px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="shell">
+    <nav>
+      <div class="brand">
+        <div class="kicker">video walkthrough</div>
+        <h1>Sift CLI + Cloud</h1>
+        <p>Guía para una toma rápida de 5–10 minutos.</p>
+      </div>
+      <ul>
+        <li><a href="#opening">01 / Opening</a></li>
+        <li><a href="#task">02 / Consigna</a></li>
+        <li><a href="#two">03 / Dos interfaces</a></li>
+        <li><a href="#cli">04 / CLI-first</a></li>
+        <li><a href="#search">05 / GitHub Search</a></li>
+        <li><a href="#architecture">06 / Arquitectura</a></li>
+        <li><a href="#understanding">07 / Query understanding</a></li>
+        <li><a href="#features">08 / Features</a></li>
+        <li><a href="#scoring">09 / Scoring</a></li>
+        <li><a href="#modes">10 / Modos CLI</a></li>
+        <li><a href="#examples">11 / 3 ejemplos</a></li>
+        <li><a href="#limits">12 / Rate limits</a></li>
+        <li><a href="#ai">13 / Uso de IA</a></li>
+        <li><a href="#scale">14 / Escalar a equipo</a></li>
+        <li><a href="#closing">15 / Cierre</a></li>
+      </ul>
+    </nav>
+
+    <main>
+      <header id="opening" class="hero">
+        <div class="kicker">Sift / Zafirus technical exercise</div>
+        <h2>Sift — Buscador inteligente de repositorios</h2>
+        <p class="subtitle">CLI + Cloud para encontrar repositorios de GitHub con ranking explicable. Consulta natural → GitHub API → señales → scoring determinístico → recomendación.</p>
+        <div class="badges">
+          <span class="badge green">Python CLI</span>
+          <span class="badge">Textual TUI</span>
+          <span class="badge">Agent JSON</span>
+          <span class="badge">Next.js Cloud</span>
+          <span class="badge">GitHub API</span>
+          <span class="badge green">Deterministic scoring</span>
+          <span class="badge">Optional Gemini explanations</span>
+          <span class="badge">OAuth / GITHUB_TOKEN</span>
+        </div>
+      </header>
+
+      <section class="recording">
+        <div class="section-head"><div class="num">REC</div><div><h3>Checklist antes de grabar</h3><p class="lead">Abrir esto en pantalla y tener las dos herramientas listas.</p></div></div>
+        <div class="grid two">
+          <div class="card"><h4>Terminal</h4><ul class="clean"><li>Repo CLI abierto</li><li><code>sift --login</code> si hay token disponible</li><li>Comandos preparados</li><li>Salida JSON/agent si la querés mostrar</li></ul></div>
+          <div class="card"><h4>Navegador</h4><ul class="clean"><li>Sift Cloud corriendo</li><li>Queries listas</li><li>README abierto si hace falta</li><li>Cámara y grabación activas</li></ul></div>
+        </div>
+      </section>
+
+      <section id="task">
+        <div class="section-head"><div class="num">01</div><div><h3>Qué pedía la consigna</h3><p class="lead">No era “usar GitHub Search”. Era decidir y defender qué significa que un repositorio sea mejor.</p></div></div>
+        <div class="grid two">
+          <div class="card"><h4>Input</h4><ul class="clean"><li>Necesidad técnica en lenguaje natural</li><li>Lenguaje de programación</li><li>Filtros opcionales como stars, fecha o licencia</li></ul></div>
+          <div class="card"><h4>Output</h4><ul class="clean"><li>Top 5 repositorios</li><li>Nombre + URL</li><li>Descripción y última actividad</li><li>Recomendación corta y criterio de ranking</li></ul></div>
+        </div>
+        <div class="cue"><strong>speaker cue</strong>“La parte central no es traer resultados; es explicar por qué esos resultados son mejores que otros.”</div>
+      </section>
+
+      <section id="two">
+        <div class="section-head"><div class="num">02</div><div><h3>Dos implementaciones</h3><p class="lead">Hice una versión terminal-first y una versión Cloud visual. Resuelven el mismo problema desde dos contextos de uso.</p></div></div>
+        <div class="grid two">
+          <div class="card">
+            <h4>Sift CLI</h4>
+            <p>Herramienta para terminal, scripts, CI y agentes. Tiene TUI, salida JSON, modo agente, speed tiers y cache local.</p>
+            <div class="terminal"><span class="cmd">$</span> sift -q "autenticación con JWT" -l Python --top 5
+<span class="cmd">$</span> sift --agent --query "procesar PDFs" --language Python
+<span class="cmd">$</span> sift --speed thorough -q "boilerplate de FastAPI" -l Python</div>
+          </div>
+          <div class="card">
+            <h4>Sift Cloud</h4>
+            <p>Companion web para demo y revisión. Muestra score, explicación, metadata, auth con GitHub y breakdown visual.</p>
+            <div class="terminal">Query → GitHub API → Feature extraction → Scoring → Explanation → UI</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="cli">
+        <div class="section-head"><div class="num">03</div><div><h3>Por qué CLI primero</h3><p class="lead">La CLI está más cerca del flujo real de un desarrollador.</p></div></div>
+        <div class="grid three">
+          <div class="card"><h4>Terminal</h4><p>Permite buscar sin salir del entorno de trabajo.</p></div>
+          <div class="card"><h4>Automatización</h4><p>El modo JSON/agent sirve para scripts, CI y otros agentes.</p></div>
+          <div class="card"><h4>TUI</h4><p>Si no pasás flags, podés usar una interfaz interactiva en terminal.</p></div>
+        </div>
+        <div class="cue"><strong>speaker cue</strong>“Cloud no reemplaza la CLI: la hace más fácil de mostrar y revisar visualmente.”</div>
+      </section>
+
+      <section id="search">
+        <div class="section-head"><div class="num">04</div><div><h3>Problema con GitHub Search plano</h3><p class="lead">GitHub puede traer repos populares, pero no necesariamente convenientes.</p></div></div>
+        <div class="grid two">
+          <div class="card"><h4>GitHub Search básico</h4><ul class="clean"><li>Keyword match</li><li>Sesgo por popularidad</li><li>No explica tradeoffs</li><li>Puede traer tutoriales o repos abandonados</li></ul></div>
+          <div class="card"><h4>Sift</h4><ul class="clean"><li>Genera variantes</li><li>Deduplica candidatos</li><li>Extrae señales</li><li>Rankea localmente y explica</li></ul></div>
+        </div>
+      </section>
+
+      <section id="architecture">
+        <div class="section-head"><div class="num">05</div><div><h3>Arquitectura compartida</h3><p class="lead">CLI y Cloud son interfaces distintas sobre la misma idea de producto.</p></div></div>
+        <div class="diagram">
+          <div class="step"><strong>1. Query</strong>Lenguaje natural + lenguaje técnico.</div>
+          <div class="step"><strong>2. Understanding</strong>Normalización, dominio, variantes.</div>
+          <div class="step"><strong>3. GitHub API</strong>Search API + metadata + README/commits.</div>
+          <div class="step"><strong>4. Ranking</strong>Scoring determinístico + explicación.</div>
+        </div>
+        <div class="terminal">User query
+  → normalize
+  → classify domain
+  → build query variants
+  → GitHub Search API
+  → dedupe candidates
+  → extract features
+  → deterministic scoring
+  → CLI / TUI / Agent JSON / Cloud UI</div>
+      </section>
+
+      <section id="understanding">
+        <div class="section-head"><div class="num">06</div><div><h3>Query understanding</h3><p class="lead">La búsqueda no es una sola query grande. Son variantes enfocadas.</p></div></div>
+        <div class="grid three">
+          <div class="card example"><h4>procesar PDFs</h4><p>Dominio: PDF / document processing. Evita caer en editores genéricos.</p></div>
+          <div class="card example"><h4>autenticación con JWT</h4><p>Dominio: JWT / token auth. Prioriza intención técnica.</p></div>
+          <div class="card example"><h4>ORM python</h4><p>Dominio: database mapping / ORM. Penaliza demos si la intención es librería.</p></div>
+        </div>
+        <div class="cue"><strong>speaker cue</strong>“No hardcodeo un ganador final. El sistema mejora generando mejores candidatos y rankeándolos por señales.”</div>
+      </section>
+
+      <section id="features">
+        <div class="section-head"><div class="num">07</div><div><h3>Feature extraction</h3><p class="lead">Cada candidato se enriquece antes de rankearlo.</p></div></div>
+        <div class="grid three">
+          <div class="card"><h4>Mantenimiento</h4><p>Último commit, archivado, forks, licencia, presión de issues.</p></div>
+          <div class="card"><h4>Documentación</h4><p>README, instalación, usage, examples, comandos y badges.</p></div>
+          <div class="card"><h4>Riesgo</h4><p>Tutoriales, demos, toy projects, full-stack apps cuando se busca librería.</p></div>
+        </div>
+        <div class="pill-row"><span class="pill">stars</span><span class="pill">forks</span><span class="pill">README</span><span class="pill">last commit</span><span class="pill">license</span><span class="pill">risk flags</span><span class="pill">cache</span></div>
+      </section>
+
+      <section id="scoring">
+        <div class="section-head"><div class="num">08</div><div><h3>Scoring</h3><p class="lead">La CLI documenta una fórmula simple y defendible. Cloud evoluciona la misma idea con más señales.</p></div></div>
+        <div class="formula">score_base =
+  35% relevancia
++ 25% actividad
++ 20% comunidad
++ 10% documentación
++ 10% mantenimiento
+
+score_final = score_base * (0.65 + 0.35 * relevancia)</div>
+        <div class="grid two" style="margin-top:14px">
+          <div class="card"><h4>Por qué relevance gate</h4><p>Evita que un repo enorme gane si no resuelve exactamente la necesidad.</p></div>
+          <div class="card"><h4>Por qué log community</h4><p>Evita que 50k stars aplasten automáticamente a un repo más chico, activo y específico.</p></div>
+        </div>
+      </section>
+
+      <section id="modes">
+        <div class="section-head"><div class="num">09</div><div><h3>Modos CLI</h3><p class="lead">Mostrar rápido 1 o 2 de estos durante el video.</p></div></div>
+        <div class="grid two">
+          <div class="card"><h4>Normal</h4><div class="terminal"><span class="cmd">$</span> sift -q "autenticación con JWT" -l Python --top 5</div></div>
+          <div class="card"><h4>JSON</h4><div class="terminal"><span class="cmd">$</span> sift -q "procesar PDFs" -l Python --format json</div></div>
+          <div class="card"><h4>Agent mode</h4><div class="terminal"><span class="cmd">$</span> sift --agent --query "autenticación con JWT" --language Python</div></div>
+          <div class="card"><h4>TUI</h4><div class="terminal"><span class="cmd">$</span> sift</div></div>
+        </div>
+      </section>
+
+      <section id="examples">
+        <div class="section-head"><div class="num">10</div><div><h3>Tres ejemplos requeridos</h3><p class="lead">Estos son los tres casos para mostrar en vivo. No hace falta que los resultados sean perfectos: hay que explicar qué señales mirar.</p></div></div>
+        <div class="grid three">
+          <div class="card example">
+            <h4>1. JWT auth / Python</h4>
+            <div class="terminal"><span class="cmd">$</span> sift -q "autenticación con JWT" -l Python --top 5</div>
+            <p><strong>Cloud:</strong> Query “JWT auth”, language “python”.</p>
+            <p><span class="ok">Mostrar:</span> score, mantenimiento, si tutoriales/full-stack quedan caveated.</p>
+          </div>
+          <div class="card example">
+            <h4>2. PDFs / Python</h4>
+            <div class="terminal"><span class="cmd">$</span> sift -q "procesar PDFs" -l Python --top 5</div>
+            <p><strong>Cloud:</strong> Query “Edit PDFs in Python”, language “python”.</p>
+            <p><span class="ok">Mostrar:</span> PDF/document processing, relevancia, actividad y caveats.</p>
+          </div>
+          <div class="card example">
+            <h4>3. ORM o FastAPI</h4>
+            <div class="terminal"><span class="cmd">$</span> sift -q "ORM python" -l Python --top 5
+<span class="cmd">$</span> sift -q "boilerplate de FastAPI" -l Python --top 5</div>
+            <p><strong>Elegir el que salga mejor en vivo.</strong></p>
+            <p><span class="ok">Mostrar:</span> ranking no solo por stars, docs y mantenimiento.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="limits">
+        <div class="section-head"><div class="num">11</div><div><h3>Rate limits y auth</h3><p class="lead">La principal restricción real es la API de GitHub.</p></div></div>
+        <div class="grid two">
+          <div class="card"><h4>CLI</h4><ul class="clean"><li>OAuth device flow con <code>sift --login</code></li><li><code>GITHUB_TOKEN</code> manual</li><li>Cache local en <code>.cache/sift</code></li><li>Speed tiers para controlar profundidad</li></ul></div>
+          <div class="card"><h4>Cloud</h4><ul class="clean"><li><code>GITHUB_TOKEN</code> como fallback</li><li>OAuth opcional</li><li>Feature extraction con rate-limit handling</li><li>Gemini opcional solo para explicación</li></ul></div>
+        </div>
+      </section>
+
+      <section id="ai">
+        <div class="section-head"><div class="num">12</div><div><h3>Uso de IA</h3><p class="lead">La IA se usó como asistencia de ingeniería, no como autoridad silenciosa del ranking.</p></div></div>
+        <div class="grid two">
+          <div class="card"><h4>Usé IA para</h4><ul class="clean"><li>Iterar prompts y arquitectura</li><li>Frontend y documentación</li><li>Auditar errores</li><li>Refactorizar scoring y explanations</li></ul></div>
+          <div class="card"><h4>No uso IA para</h4><ul class="clean"><li>Decidir qué repo gana</li><li>Cambiar scores</li><li>Reordenar resultados</li><li>Inventar facts de repos</li></ul></div>
+        </div>
+        <div class="cue"><strong>speaker cue</strong>“La decisión principal fue no confiar el ranking a una caja negra. La IA puede redactar mejor, pero no decide.”</div>
+      </section>
+
+      <section id="scale">
+        <div class="section-head"><div class="num">13</div><div><h3>Cómo lo escalaría a 100+ devs</h3><p class="lead">La versión actual resuelve el ejercicio; una versión de equipo necesita infraestructura.</p></div></div>
+        <div class="grid three">
+          <div class="card"><h4>Backend compartido</h4><p>GitHub App token, no depender de tokens personales.</p></div>
+          <div class="card"><h4>Cache distribuido</h4><p>Cache por query normalizada y por repo enriquecido.</p></div>
+          <div class="card"><h4>Workers</h4><p>Cola async para README, commits, releases y contributors.</p></div>
+          <div class="card"><h4>Señales externas</h4><p>PyPI/NPM downloads, dependents, release cadence.</p></div>
+          <div class="card"><h4>Feedback loop</h4><p>Útil/no útil para ajustar pesos o entrenar ranker futuro.</p></div>
+          <div class="card"><h4>Observabilidad</h4><p>Rate limit, latencia, cache hit ratio, queries sin buenos resultados.</p></div>
+        </div>
+      </section>
+
+      <section id="closing">
+        <div class="section-head"><div class="num">14</div><div><h3>Cierre</h3><p class="lead">Mensaje final para el video.</p></div></div>
+        <div class="cue"><strong>closing line</strong>“Sift no es solo una UI linda para GitHub Search. Es una capa de ranking explicable: la CLI lo hace usable en terminal, scripts y agentes; la Cloud lo hace fácil de revisar visualmente. La parte central es que puede explicar por qué recomienda un repositorio, y eso es lo que GitHub Search básico no resuelve.”</div>
+        <p class="small">Fin. Después de esto, mostrar README o repo público si queda tiempo.</p>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

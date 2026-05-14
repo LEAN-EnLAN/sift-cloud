@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sift Cloud — Video Walkthrough Zafirus</title>
+  <style>
+    :root {
+      --bg: #0a0f0d;
+      --bg-soft: #101714;
+      --card: #111a16;
+      --line: #1f352c;
+      --text: #d7f7e8;
+      --muted: #8ab8a3;
+      --accent: #22F5A7;
+      --warning: #f5d522;
+      --mono: "SFMono-Regular", Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      --sans: Inter, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      margin: 0;
+      font-family: var(--sans);
+      background: radial-gradient(circle at top right, #10231b 0%, var(--bg) 38%);
+      color: var(--text);
+      line-height: 1.5;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+
+    aside {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      border-right: 1px solid var(--line);
+      padding: 24px 18px;
+      background: rgba(9, 15, 12, 0.92);
+      backdrop-filter: blur(3px);
+      overflow: auto;
+    }
+
+    .brand {
+      font-family: var(--mono);
+      font-size: 14px;
+      color: var(--accent);
+      margin-bottom: 14px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    nav a {
+      display: block;
+      color: var(--muted);
+      text-decoration: none;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      margin-bottom: 6px;
+      font-family: var(--mono);
+      font-size: 12px;
+    }
+
+    nav a:hover {
+      border-color: var(--line);
+      color: var(--accent);
+      background: #0f1814;
+    }
+
+    main {
+      padding: 28px;
+      max-width: 1100px;
+      width: 100%;
+    }
+
+    .card {
+      background: linear-gradient(180deg, #131f1a 0%, #101814 100%);
+      border: 1px solid var(--line);
+      padding: 22px;
+      margin-bottom: 20px;
+    }
+
+    h1, h2, h3 { margin: 0 0 12px; line-height: 1.2; }
+    h1 { font-size: 34px; }
+    h2 { font-size: 23px; color: var(--accent); }
+    h3 { font-size: 18px; }
+
+    .subtitle { color: var(--muted); font-size: 17px; margin-bottom: 16px; }
+    .section-label {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--accent);
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      margin-bottom: 8px;
+    }
+
+    .badges { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+    .badge {
+      border: 1px solid var(--line);
+      padding: 5px 10px;
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--text);
+      background: #0d1512;
+    }
+
+    ul { margin: 0; padding-left: 18px; }
+    li { margin: 4px 0; }
+
+    .grid-2 {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+      gap: 14px;
+    }
+
+    .code {
+      font-family: var(--mono);
+      font-size: 13px;
+      background: #0b130f;
+      border: 1px solid var(--line);
+      padding: 12px;
+      white-space: pre-wrap;
+      color: #c9ffe6;
+    }
+
+    .cue {
+      border-left: 3px solid var(--accent);
+      background: #0c1612;
+      padding: 10px 12px;
+      margin-top: 12px;
+      color: #bfead8;
+      font-size: 14px;
+    }
+
+    .example {
+      border: 1px solid #244637;
+      background: #0f1915;
+      padding: 16px;
+      margin-top: 12px;
+    }
+
+    .checklist li::marker { color: var(--accent); }
+
+    .notice {
+      color: #e8ffe2;
+      border: 1px dashed #315342;
+      background: #102017;
+      padding: 10px;
+      margin-top: 10px;
+      font-size: 14px;
+    }
+
+    .warn { color: var(--warning); }
+
+    @media (max-width: 920px) {
+      .layout { grid-template-columns: 1fr; }
+      aside { position: relative; height: auto; border-right: none; border-bottom: 1px solid var(--line); }
+      main { padding: 18px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="layout">
+    <aside>
+      <div class="brand">Sift Cloud / Walkthrough</div>
+      <nav>
+        <a href="#s0">00. Checklist</a>
+        <a href="#s1">01. Opening</a>
+        <a href="#s2">02. Qué pedía el ejercicio</a>
+        <a href="#s3">03. Problema base</a>
+        <a href="#s4">04. Arquitectura</a>
+        <a href="#s5">05. Query understanding</a>
+        <a href="#s6">06. Feature extraction</a>
+        <a href="#s7">07. Scoring</a>
+        <a href="#s8">08. 3 ejemplos</a>
+        <a href="#s9">09. Capa de explicación</a>
+        <a href="#s10">10. Rate limits & auth</a>
+        <a href="#s11">11. Escalado</a>
+        <a href="#s12">12. Uso de IA</a>
+        <a href="#s13">13. Cierre</a>
+      </nav>
+    </aside>
+
+    <main>
+      <section id="s0" class="card">
+        <div class="section-label">00 · Preparación de grabación</div>
+        <h2>Recording checklist</h2>
+        <ul class="checklist">
+          <li>App corriendo en local.</li>
+          <li>GitHub token configurado (si está disponible).</li>
+          <li>Tres queries listas para ejecutar.</li>
+          <li>README abierto para referencia.</li>
+          <li>Terminal lista para mostrar logs/comandos.</li>
+          <li>Cámara encendida.</li>
+        </ul>
+      </section>
+
+      <section id="s1" class="card">
+        <div class="section-label">01 · Opening</div>
+        <h1>Sift Cloud — Buscador inteligente de repositorios</h1>
+        <p class="subtitle">Consulta en lenguaje natural → GitHub Search API → señales → scoring explicable → top repos recomendados</p>
+        <div class="badges">
+          <span class="badge">Next.js</span><span class="badge">GitHub API</span><span class="badge">TypeScript</span>
+          <span class="badge">Deterministic scoring</span><span class="badge">Optional Gemini explanations</span><span class="badge">OAuth / GITHUB_TOKEN</span>
+        </div>
+        <div class="cue"><strong>Speaker cue:</strong> Abrí con foco en el problema: no es sólo buscar repos, es priorizar calidad técnica con trazabilidad.</div>
+      </section>
+
+      <section id="s2" class="card">
+        <div class="section-label">02 · Qué pedía el ejercicio</div>
+        <ul>
+          <li>Recibir una necesidad técnica en lenguaje natural.</li>
+          <li>Recibir un lenguaje de programación.</li>
+          <li>Devolver top 5 repositorios de GitHub.</li>
+          <li>Mostrar nombre + URL, descripción y última actividad.</li>
+          <li>Agregar recomendación corta y explicar por qué es “mejor”.</li>
+          <li>Evitar ranking puramente por stars.</li>
+          <li>Contemplar abandonados, forks, tutoriales y candidatos débiles.</li>
+          <li>Incluir 3 ejemplos de uso en README/salida.</li>
+        </ul>
+      </section>
+
+      <section id="s3" class="card">
+        <div class="section-label">03 · Problema con GitHub Search plano</div>
+        <div class="grid-2">
+          <div>
+            <h3>Plain search</h3>
+            <ul><li>Keyword match.</li><li>Sesgo a popularidad.</li><li>Sin explicación.</li><li>Sin modelo de calidad.</li></ul>
+          </div>
+          <div>
+            <h3>Sift</h3>
+            <ul><li>Entiende query y dominio.</li><li>Construye variantes neutrales.</li><li>Extrae señales.</li><li>Rankea por múltiples factores.</li><li>Explica tradeoffs y riesgos.</li></ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="s4" class="card">
+        <div class="section-label">04 · Arquitectura del sistema</div>
+        <div class="code">User query
+→ normalize
+→ classify domain
+→ generate query variants
+→ GitHub Search API
+→ dedupe candidates
+→ feature extraction
+→ deterministic scoring
+→ explanation
+→ UI / Markdown / report</div>
+        <div class="notice">Nota: la IA puede asistir redacción de explicaciones, pero el ranking se mantiene determinístico.</div>
+      </section>
+
+      <section id="s5" class="card">
+        <div class="section-label">05 · Query understanding</div>
+        <ul>
+          <li>Normalización de consulta natural.</li>
+          <li>Detección de dominio técnico.</li>
+          <li>Eliminación de trampas léxicas.</li>
+          <li>Generación de variantes neutrales.</li>
+          <li>Sin inyección hardcodeada de repos canónicos.</li>
+        </ul>
+        <div class="code">"Edit PDFs in Python" → variantes orientadas a pdf/document processing/library
+"JWT auth" → variantes de jwt/token authentication
+"ORM python" → variantes de orm/database mapping</div>
+      </section>
+
+      <section id="s6" class="card">
+        <div class="section-label">06 · Feature extraction</div>
+        <div class="grid-2">
+          <div>
+            <h3>Grupos de señales</h3>
+            <ul>
+              <li>Relevance</li><li>Maintenance</li><li>Documentation</li><li>Community</li><li>Modernity</li><li>Authority-like signals</li><li>Risk penalty</li>
+            </ul>
+          </div>
+          <div>
+            <h3>Ejemplos por grupo</h3>
+            <ul>
+              <li><strong>Maintenance:</strong> última actividad, issues/forks/license.</li>
+              <li><strong>Documentation:</strong> README, instalación, uso, ejemplos.</li>
+              <li><strong>Risk:</strong> tutorial/demo/example, app full-stack cuando se pidió librería, archived/fork/toy.</li>
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      <section id="s7" class="card">
+        <div class="section-label">07 · Scoring formula</div>
+        <div class="code">total =
+  relevance * 0.30 +
+  maintenance * 0.20 +
+  documentation * 0.15 +
+  community * 0.15 +
+  modernity * 0.10 +
+  authority * 0.10
+  - riskPenalty</div>
+        <ul>
+          <li>Relevance (30%): match técnico real con la necesidad.</li>
+          <li>Maintenance (20%): probabilidad de uso mantenible.</li>
+          <li>Documentation + Community (30%): capacidad de adopción.</li>
+          <li>Modernity + Authority (20%): vigencia y señales de confianza.</li>
+          <li>Risk penalty: corrige demos, tutoriales o candidatos engañosos.</li>
+        </ul>
+        <div class="notice">El scoring es <strong>determinístico y auditable</strong>: mismo input, mismo orden y mismos puntajes.</div>
+      </section>
+
+      <section id="s8" class="card">
+        <div class="section-label">08 · Tres ejemplos requeridos</div>
+
+        <div class="example">
+          <h3>Ejemplo 1 · “Edit PDFs in Python” (python)</h3>
+          <ul>
+            <li><strong>Qué espero:</strong> librerías de procesamiento PDF/documento por encima de editores de texto o tutoriales.</li>
+            <li><strong>Qué muestro en vivo:</strong> top 5, score por señales, y caveats para repos stale/tutorial.</li>
+            <li><strong>Qué revisar:</strong> coherencia entre necesidad y tipo de repo recomendado.</li>
+          </ul>
+        </div>
+
+        <div class="example">
+          <h3>Ejemplo 2 · “JWT auth” (python)</h3>
+          <ul>
+            <li><strong>Qué espero:</strong> librerías reutilizables de JWT/auth por encima de apps tutorial full-stack viejas.</li>
+            <li><strong>Qué muestro en vivo:</strong> impacto de maintenance y adopción en el ranking final.</li>
+            <li><strong>Qué revisar:</strong> explicación de tradeoffs cuando un repo es popular pero riesgoso.</li>
+          </ul>
+        </div>
+
+        <div class="example">
+          <h3>Ejemplo 3 · “ORM python” (python)</h3>
+          <ul>
+            <li><strong>Qué espero:</strong> librerías de mapeo ORM por encima de demos genéricas.</li>
+            <li><strong>Qué muestro en vivo:</strong> peso de docs + mantenimiento en el orden.</li>
+            <li><strong>Qué revisar:</strong> si el ranking refleja uso real en proyectos productivos.</li>
+          </ul>
+        </div>
+
+        <p class="warn"><strong>Importante:</strong> durante la grabación no inventar resultados. Mostrar salida real actual de la app.</p>
+      </section>
+
+      <section id="s9" class="card">
+        <div class="section-label">09 · Explanation layer</div>
+        <ul>
+          <li>La explicación determinística es la fuente de verdad.</li>
+          <li>No debe afirmar actividad reciente si un repo está stale.</li>
+          <li>No debe afirmar adopción fuerte en repos de baja señal.</li>
+          <li>Agrega caveats para licencias copyleft y riesgo tutorial/demo.</li>
+        </ul>
+        <div class="code">Gemini (opcional):
+- Puede reescribir explicaciones para legibilidad.
+- No rankea.
+- No cambia score ni orden.
+- Si falta GEMINI_API_KEY, fallback seguro.</div>
+      </section>
+
+      <section id="s10" class="card">
+        <div class="section-label">10 · Rate limits y auth</div>
+        <ul>
+          <li>GitHub API anónima tiene límites estrictos.</li>
+          <li><code>GITHUB_TOKEN</code> puede funcionar como fallback del servidor.</li>
+          <li>GitHub OAuth permite usar token propio del usuario.</li>
+          <li>En producción conviene cachear metadata para bajar costo/latencia.</li>
+        </ul>
+      </section>
+
+      <section id="s11" class="card">
+        <div class="section-label">11 · Qué mejoraría para 100+ devs</div>
+        <ul>
+          <li>Cache persistente.</li>
+          <li>Background workers.</li>
+          <li>Cola para extracción de features.</li>
+          <li>Señales extra desde PyPI/NPM (descargas/adopción).</li>
+          <li>Observabilidad end-to-end.</li>
+          <li>Saved searches / historial.</li>
+          <li>Analítica de uso por equipo.</li>
+          <li>Estrategia robusta de timeout/retry.</li>
+          <li>Deploy con mayor timeout de funciones server.</li>
+        </ul>
+      </section>
+
+      <section id="s12" class="card">
+        <div class="section-label">12 · Uso de IA</div>
+        <ul>
+          <li>El uso de IA fue parte obligatoria del ejercicio.</li>
+          <li>La IA se usó como asistencia de ingeniería.</li>
+          <li>Los prompts ayudaron a iterar frontend, scoring, docs y auditoría.</li>
+          <li>El ranking final sigue siendo determinístico.</li>
+          <li>El LLM no decide silenciosamente la respuesta.</li>
+        </ul>
+      </section>
+
+      <section id="s13" class="card">
+        <div class="section-label">13 · Cierre</div>
+        <h2>Sift no es sólo un GitHub Search más lindo.</h2>
+        <p class="subtitle">Es una capa de ranking explicable sobre metadata de GitHub, diseñada para ayudar a developers a elegir mejores repositorios más rápido.</p>
+        <div class="cue"><strong>Speaker cue final:</strong> Cerrá remarcando confiabilidad técnica: criterio explícito, señales auditables y capacidad de escalar.</div>
+      </section>
+    </main>
+  </div>
+</body>
+</html>

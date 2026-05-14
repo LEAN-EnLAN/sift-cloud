@@ -1,20 +1,22 @@
 import { NextResponse } from 'next/server';
 import { SearchQuerySchema } from '@sift/shared';
 import { buildQueryVariants } from '@sift/shared';
+import { understandQueryWithLLM } from '../../../lib/ai/understand-query-with-llm';
+import { explainWithGemini } from '../../../lib/ai/explain-with-gemini';
+import { getGeminiApiKey } from '../../../lib/ai/get-gemini-api-key';
 import { scoreRepo, type ScoredRepoResult, SCORING_WEIGHTS, MAX_RISK_PENALTY, explainRepo, compareRepos } from '@sift/shared';
 import { mapRepo } from '../../../lib/map-repo';
 import { extractFeaturesForRepo } from '../../../lib/features/extract-repo-features';
 import { getGithubAuthInfo } from '../../../lib/github/get-github-auth-token';
-import { explainWithGemini } from '../../../lib/ai/explain-with-gemini';
 import { Octokit } from 'octokit';
 
 export const runtime = "nodejs";
 
-const MAX_ENRICHED_REPOS_NORMAL = 5;
-const MAX_ENRICHED_REPOS_DEBUG = 10;
-const SEARCH_RESULTS_PER_VARIANT = 8;
-const MAX_VARIANTS_TO_SEARCH = 4;
-const FEATURE_EXTRACTION_CONCURRENCY = 2;
+const MAX_ENRICHED_REPOS_NORMAL = 15;
+const MAX_ENRICHED_REPOS_DEBUG = 20;
+const SEARCH_RESULTS_PER_VARIANT = 20;
+const MAX_VARIANTS_TO_SEARCH = 6;
+const FEATURE_EXTRACTION_CONCURRENCY = 4;
 
 async function mapWithConcurrency<T, R>(
   items: T[],
@@ -58,7 +60,11 @@ export async function GET(request: Request) {
 
   const { query, language } = parsed.data;
 
-  const understanding = buildQueryVariants({ query, language });
+  let understanding = await understandQueryWithLLM(query, language);
+  
+  if (!understanding) {
+    understanding = buildQueryVariants({ query, language });
+  }
 
   try {
     const allResults = new Map();
@@ -194,41 +200,38 @@ export async function GET(request: Request) {
       }
     });
 
-    const geminiAvailable = !!process.env.GEMINI_API_KEY;
-    let fallbackCount = 0;
+    const apiKeyForGemini = getGeminiApiKey();
+    const geminiAvailable = !!apiKeyForGemini;
 
     if (geminiAvailable) {
-      for (let i = 0; i < Math.min(5, explainedRepos.length); i++) {
-        const repo = explainedRepos[i];
-        if (repo.explanation) {
-          try {
-            // Apply a timeout of 6 seconds per call to avoid latency spikes
-            const geminiPromise = explainWithGemini({
-              fullName: repo.fullName,
-              query,
-              language,
-              scoreTotal: repo.score.total,
-              scoreParts: repo.score.parts,
-              description: repo.description,
-              stars: repo.stars || repo.features?.community?.stars || 0,
-              license: repo.features?.maintenance?.license,
-              daysSinceLastCommit: repo.features?.activity?.daysSinceLastCommit,
-              contributors: repo.features?.community?.contributorsCount || 0,
-              deterministicExplanation: repo.explanation,
-            });
-            
-            const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
-            const geminiExpl = await Promise.race([geminiPromise, timeoutPromise]);
-            
-            if (geminiExpl) {
-              repo.explanation = geminiExpl;
-            } else {
-              fallbackCount++;
+      const apiKey = apiKeyForGemini;
+      const topContext = explainedRepos.slice(0, 5).map(repo => ({
+        fullName: repo.fullName,
+        description: repo.description,
+        score: { total: repo.score.total, parts: repo.score.parts },
+        facts: {
+            stars: repo.stars,
+            license: repo.features?.maintenance?.license || null,
+            daysSinceLastCommit: repo.features?.activity?.daysSinceLastCommit || null,
+            contributorsCount: repo.features?.maintenance?.contributorsCount || null,
+            riskPenalty: repo.score?.parts?.riskPenalty || 0,
+            isTutorialLike: repo.features?.risk?.isTutorial || false,
+            libraryLikenessScore: repo.features?.libraryLikeness?.score || null
+        },
+        deterministicExplanation: repo.explanation
+      }));
+      
+      try {
+        const geminiExplanations = await explainWithGemini({ query, language, repos: topContext }, apiKey as string, { timeoutMs: 12000 });
+        if (geminiExplanations) {
+          for (const repo of explainedRepos) {
+            if (geminiExplanations[repo.fullName]) {
+              repo.explanation = geminiExplanations[repo.fullName];
             }
-          } catch (err) {
-             fallbackCount++;
           }
         }
+      } catch (err) {
+        console.error("Gemini explanation layer failed:", err);
       }
     }
 
@@ -258,9 +261,8 @@ export async function GET(request: Request) {
             rankedCount: explainedRepos.length
           },
           explanations: {
-            mode: geminiAvailable ? "gemini" : "deterministic",
-            geminiAvailable,
-            fallbackCount
+            mode: "deterministic",
+            geminiAvailable
           },
           rateLimit: rateLimitInfo.hit ? rateLimitInfo : undefined
         },

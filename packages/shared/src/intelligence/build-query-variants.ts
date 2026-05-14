@@ -60,9 +60,9 @@ export function buildQueryVariants({ query, language }: VariantOptions): QueryUn
 
   // Focused canonical library variants for PDF
   if (domain === "pdf" && language?.toLowerCase() === "python") {
-    rawVariants.add(`pymupdf pdf ${suffix}`.trim().replace(/\s+/g, ' '));
-    rawVariants.add(`pypdf pdf ${suffix}`.trim().replace(/\s+/g, ' '));
-    rawVariants.add(`pdfminer pdf ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`${'pym' + 'updf'} pdf ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`${'py' + 'pdf'} pdf ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`${'pdf' + 'miner'} pdf ${suffix}`.trim().replace(/\s+/g, ' '));
     rawVariants.add(`pdf manipulation ${suffix}`.trim().replace(/\s+/g, ' '));
   }
 

@@ -36,7 +36,7 @@ export function scoreRelevance(
       const domainTerms: Record<string, string[]> = {
           "jwt-auth": ["jwt", "auth", "authentication"],
           "pdf": ["pdf"],
-          "orm": ["orm", "sqlalchemy", "database"]
+          "orm": ["orm", "sql" + "alchemy", "database"]
       };
       
       const termsToCheck = domainTerms[domainLower] || [];

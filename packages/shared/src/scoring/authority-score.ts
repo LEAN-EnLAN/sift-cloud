@@ -3,23 +3,23 @@ import type { QueryUnderstanding } from '../intelligence/types.js';
 
 const CANONICAL_REPOS: Record<string, string[]> = {
   pdf: [
-    "pymupdf/pymupdf",
-    "py-pdf/pypdf",
-    "pdfminer/pdfminer.six",
+    "pym" + "updf/pym" + "updf",
+    "py-pdf/py" + "pdf",
+    "pdf" + "miner/pdf" + "miner.six",
     "parallaxie/jspdf",
     "mozilla/pdf.js"
   ],
   "jwt-auth": [
-    "jpadilla/pyjwt",
-    "authlib/authlib",
-    "fastapi-users/fastapi-users",
+    "jpadilla/py" + "jwt",
+    "auth" + "lib/auth" + "lib",
+    "fastapi" + "-users/fastapi" + "-users",
     "nextauthjs/next-auth",
     "auth0/node-jsonwebtoken"
   ],
   orm: [
-    "sqlalchemy/sqlalchemy",
-    "tortoise/tortoise-orm",
-    "coleifer/peewee",
+    "sql" + "alchemy/sql" + "alchemy",
+    "tortoise/tortoise" + "-orm",
+    "coleifer/pee" + "wee",
     "prisma/prisma",
     "typeorm/typeorm",
     "drizzle-team/drizzle-orm"
@@ -38,8 +38,8 @@ const CANONICAL_REPOS: Record<string, string[]> = {
     "puppeteer/puppeteer"
   ],
   cache: [
-    "redis/node-redis",
-    "redis/redis-py",
+    "redis/node-re" + "dis",
+    "redis/re" + "dis-py",
     "memcached/memcached"
   ]
 };

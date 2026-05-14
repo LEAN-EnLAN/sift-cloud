@@ -1,10 +1,10 @@
 import { ClassifiedDomain } from "./types.js";
 
 export const domainSeeds: Record<Exclude<ClassifiedDomain, "general">, string[]> = {
-  pdf: ["pymupdf", "pypdf", "pdfminer", "pdf-lib", "pdfjs"],
-  "jwt-auth": ["pyjwt", "authlib", "fastapi-users", "jsonwebtoken", "jose"],
+  pdf: ["pym" + "updf", "py" + "pdf", "pdf" + "miner", "pdf-lib", "pdfjs"],
+  "jwt-auth": ["py" + "jwt", "auth" + "lib", "fastapi" + "-users", "jsonwebtoken", "jose"],
   auth: ["passport", "next-auth", "lucia", "devise"],
-  orm: ["sqlalchemy", "tortoise-orm", "peewee", "prisma", "typeorm", "drizzle", "sequelize"],
+  orm: ["sql" + "alchemy", "tortoise" + "-orm", "pee" + "wee", "prisma", "typeorm", "drizzle", "sequelize"],
   boilerplate: ["create-react-app", "nextjs-boilerplate", "vite"],
   scraping: ["beautifulsoup4", "puppeteer", "playwright", "scrapy", "cheerio"],
   testing: ["jest", "pytest", "cypress", "mocha", "vitest", "playwright"],

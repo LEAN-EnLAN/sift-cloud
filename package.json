@@ -1,0 +1,27 @@
+{
+  "name": "sift-monorepo",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm --workspace=@sift/web run dev",
+    "dev:full": "turbo run dev",
+    "build": "turbo run build",
+    "lint": "turbo run lint"
+  },
+  "devDependencies": {
+    "turbo": "latest"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "packageManager": "npm@10.9.7",
+  "dependencies": {
+    "@tailwindcss/postcss": "^4.3.0",
+    "eslint": "^9.39.4",
+    "eslint-config-next": "^16.2.6",
+    "lucide-react": "^1.14.0"
+  }
+}

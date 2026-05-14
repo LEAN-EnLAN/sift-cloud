@@ -1,122 +1,101 @@
-import type { RepoExplanation } from "@sift/shared";
+import { GoogleGenAI } from '@google/genai';
+import { type RepoExplanation } from '@sift/shared';
 
-export type GeminiExplanationInput = {
+export async function explainWithGemini(input: {
+  fullName: string;
   query: string;
   language?: string;
-  repos: Array<{
-    fullName: string;
-    description: string | null;
-    score: {
-      total: number;
-      parts: Record<string, number>;
-    };
-    facts: {
-      stars?: number;
-      license?: string | null;
-      daysSinceLastCommit?: number | null;
-      contributorsCount?: number | null;
-      riskPenalty?: number;
-      isTutorialLike?: boolean;
-      libraryLikenessScore?: number;
-    };
-    deterministicExplanation: RepoExplanation;
-  }>;
-};
-
-export async function explainWithGemini(
-  input: GeminiExplanationInput,
-  apiKey: string,
-  options?: { timeoutMs?: number }
-): Promise<Record<string, RepoExplanation> | null> {
-  const timeoutMs = options?.timeoutMs ?? 8000;
-
-  const prompt = `You are rewriting repository explanations for a search engine.
-
-Rules:
-- Ranking and scores are already decided deterministically. NEVER change rank, score, or order.
-- Use ONLY the provided facts. Do not invent facts.
-- If daysSinceLastCommit > 180, do NOT claim "recent activity".
-- If stars < 1000, do NOT claim "strong community adoption".
-- If isTutorialLike is true, mention it is tutorial/demo-oriented.
-- If license is AGPL/GPL/LGPL, mention copyleft licensing caveat.
-- Keep explanations concise and professional.
-- Return ONLY valid JSON in this exact shape:
-
-{
-  "explanations": {
-    "owner/repo": {
-      "short": "...",
-      "bullets": ["...", "..."],
-      "caveats": ["..."]
-    }
-  }
-}
-
-Query: ${input.query}
-Language: ${input.language || "any"}
-
-Repos:
-${input.repos.map((r, i) => `
-${i + 1}. ${r.fullName}
-   Description: ${r.description || "N/A"}
-   Stars: ${r.facts.stars || 0}
-   Days since last commit: ${r.facts.daysSinceLastCommit ?? "unknown"}
-   License: ${r.facts.license || "unknown"}
-   Tutorial-like: ${r.facts.isTutorialLike ? "yes" : "no"}
-   Deterministic explanation: ${JSON.stringify(r.deterministicExplanation)}
-`).join("\n")}`;
+  scoreTotal: number;
+  scoreParts: Record<string, number>;
+  description?: string;
+  stars: number;
+  license?: string;
+  daysSinceLastCommit?: number;
+  contributors: number;
+  deterministicExplanation: RepoExplanation;
+}): Promise<RepoExplanation | null> {
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey) return null;
 
   try {
-    const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const ai = new GoogleGenAI({ apiKey });
+    
+    const prompt = `You are a technical search assistant. Rewrite the following GitHub repository explanation professionally, concisely, and truthfully.
+    
+Rules:
+- Rewrite the explanation to sound natural but strictly stick to the facts provided.
+- Do NOT invent facts.
+- Do NOT claim recent maintenance if daysSinceLastCommit > 180 (or if not provided).
+- Do NOT claim strong adoption if stars < 1000.
+- If the license is AGPL, GPL-2.0, GPL-3.0, or LGPL (case-insensitive), you MUST mention a copyleft caveat in the caveats array: "Copyleft license detected; review licensing constraints before production use."
+- Only use the provided facts.
+- Output MUST be strictly valid JSON matching the specified schema.
 
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`,
-      {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          contents: [{ parts: [{ text: prompt }] }],
-          generationConfig: {
-            temperature: 0.3,
-            maxOutputTokens: 1200,
-            responseMimeType: "application/json"
-          }
-        }),
-        signal: controller.signal
+Input Facts:
+Repository: ${input.fullName}
+Query: "${input.query}" (Language: ${input.language || 'any'})
+Description: ${input.description || 'N/A'}
+Score Total: ${input.scoreTotal}
+Score Breakdown: ${JSON.stringify(input.scoreParts)}
+Stars: ${input.stars}
+License: ${input.license || 'N/A'}
+Days Since Last Commit: ${input.daysSinceLastCommit ?? 'Unknown'}
+Contributors Count: ${input.contributors}
+
+Deterministic Output to Rewrite:
+${JSON.stringify(input.deterministicExplanation, null, 2)}`;
+
+    const response = await ai.models.generateContent({
+      model: 'gemini-2.5-flash',
+      contents: prompt,
+      config: {
+        responseMimeType: 'application/json',
+        responseSchema: {
+          type: 'object',
+          properties: {
+            short: {
+              type: 'string',
+              description: 'A 1-sentence concise summary specific to the repo and query.'
+            },
+            bullets: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Up to 4 truthful bullet points highlighting key signals (maintenance, community, documentation, relevance). DO NOT output empty arrays.'
+            },
+            caveats: {
+              type: 'array',
+              items: { type: 'string' },
+              description: 'Array of warnings. Must include copyleft warnings if applicable. May include risk penalties if > 0.'
+            }
+          },
+          required: ['short', 'bullets', 'caveats']
+        },
+        temperature: 0.1,
       }
-    );
+    });
 
-    clearTimeout(timeout);
-
-    if (!response.ok) {
-      return null;
+    const textPayload = response.text;
+    if (!textPayload) return null;
+    
+    const parsed = JSON.parse(textPayload);
+    
+    if (
+      typeof parsed?.short === 'string' &&
+      Array.isArray(parsed?.bullets) &&
+      Array.isArray(parsed?.caveats)
+    ) {
+      return {
+        short: parsed.short,
+        bullets: parsed.bullets,
+        caveats: parsed.caveats,
+        isGemini: true
+      } as RepoExplanation & { isGemini: boolean };
     }
 
-    const data = await response.json();
-    const text = data.candidates?.[0]?.content?.parts?.[0]?.text;
-    if (!text) return null;
+    return null;
 
-    const parsed = JSON.parse(text);
-    if (!parsed.explanations || typeof parsed.explanations !== "object") {
-      return null;
-    }
-
-    // Validate shape
-    const result: Record<string, RepoExplanation> = {};
-    for (const [key, value] of Object.entries(parsed.explanations)) {
-      const v = value as any;
-      if (v && typeof v.short === "string" && Array.isArray(v.bullets) && Array.isArray(v.caveats)) {
-        result[key] = {
-          short: v.short,
-          bullets: v.bullets.slice(0, 5),
-          caveats: v.caveats.slice(0, 5)
-        };
-      }
-    }
-
-    return Object.keys(result).length > 0 ? result : null;
-  } catch {
+  } catch (error) {
+    console.error('Gemini explanation failed:', error);
     return null;
   }
 }

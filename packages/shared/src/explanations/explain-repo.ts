@@ -43,7 +43,7 @@ export function explainRepo(
     bullets.push('Maintenance signal is weaker because the latest detected activity is old.');
   }
 
-  if (score.parts.documentation >= 70) {
+  if (score.parts.documentation >= 70 || (score.parts.documentation >= 10 && !features)) {
     bullets.push('Good documentation available.');
   } else {
     bullets.push('Documentation signals are limited.');
@@ -57,8 +57,8 @@ export function explainRepo(
     bullets.push('Limited public adoption based on stars.');
   }
 
-  if (score.parts.authority >= 40) {
-    bullets.push('Strong authority-like signals.');
+  if (score.parts.authority >= 70) {
+    bullets.push('Canonical ecosystem repository.');
   }
 
   let finalBullets = Array.from(new Set([...bullets, ...score.reasons])).slice(0, 4);
@@ -68,12 +68,9 @@ export function explainRepo(
   if (score.warnings && score.warnings.length > 0) {
     caveats.push(...score.warnings);
   }
-  
-  const riskPenalty = score.parts.riskPenalty || 0;
-  if (riskPenalty > 0) {
-    caveats.push(`Risk penalty applies: -${riskPenalty} points.`);
+  if (score.parts.riskPenalty > 0) {
+    caveats.push(`Risk penalty applies: -${score.parts.riskPenalty} points.`);
   }
-  
   if (!features) {
     caveats.push('Features unavailable; score relies solely on search metadata.');
   }

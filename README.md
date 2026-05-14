@@ -15,11 +15,11 @@ Sift transforms your query, intelligently retrieves candidates, extracts rich re
 
 ## Architecture
 
-1. **Query Understanding:** We parse intent, detect domain, build optimized query variants.
+1. **Query Understanding:** We parse intent, detect domain, build optimized query variants, and inject high-value seeds for known canonical libraries.
 2. **GitHub Retrieval:** We fetch initial results from the GitHub Search API using our variants. 
 3. **Feature Extraction:** We map the repository data into rich structural signals: activity, maintenance, documentation completeness, community strength, technical modernity, and risk flags.
 4. **Deterministic Scoring:** The ranking engine applies transparent scoring based on weights. No hidden embeddings, no magic models that re-rank invisibly.
-5. **Explanation Layer:** We construct short, human-readable explanations summarizing exactly *why* a repository ranked where it did. These explanations can optionally be polished by Gemini.
+5. **Explanation Layer:** We construct short, human-readable explanations summarizing exactly *why* a repository ranked where it did, along with tradeoffs between top results. (Optional: You can provide `GEMINI_API_KEY` to professionally rewrite these explanations behind the scenes. Ranking order and scoring remains deterministic.)
 6. **UI / Debug Mode:** The React frontend displays results, comparisons, and exposes full query understanding/scoring transparently when Debug Mode is turned on.
 
 ## Scoring Formula
@@ -35,25 +35,11 @@ total =
   - riskPenalty
 ```
 
-## Optional Gemini Explanation Rewriting
-
-Sift ranking and scoring are **always deterministic**. Gemini is completely optional and used **only** to rewrite already-factual explanations into clearer professional prose.
-
-- Ranking, scores, and order are never affected by Gemini.
-- If `GEMINI_API_KEY` is missing, deterministic explanations are always used.
-- Configure `GEMINI_API_KEY` **server-side only**. Never use `NEXT_PUBLIC_GEMINI_API_KEY`.
-- When enabled, the frontend asynchronously requests polished explanations for the top results after the initial search.
-
-```env
-GEMINI_API_KEY=your_gemini_api_key_here
-```
-
-## Why Sift is better than standard GitHub search
-
-- **Does not rank only by stars.** Sift penalizes abandoned/toy repositories or "Awesome lists".
-- **Understands context.** If you search for an "orm", Sift builds smart query variants.
+## Why Sift is better than standard GitHub search:
+- **Does not rank only by stars.** Sift penalizes abandoned/toy repositories or "Awesome lists" which typically inflate search results.
+- **Understands context.** If you search for an "orm", Sift injects targeted ecosystem terms automatically (like "sqlalchemy") to ensure canonical results are found.
 - **Holistic ranking.** Recognizes good README documents, checks for CI and recent releases. 
-- **Explainable.** The final output provides a comparison and clear breakdown of tradeoffs. Explanations are truthful by default and can be optionally polished.
+- **Explainable.** The final output provides a comparison and clear breakdown of tradeoffs.
 
 ## Setup
 
@@ -103,11 +89,61 @@ You can interact directly with the backend API. Append `&debug=true` to see feat
 - `/api/search?query=como%20edito%20pdfs%20en%20python&language=python&debug=true`
 - `/api/search?query=orm%20para%20python&language=python&debug=true`
 
-### Optional Gemini Explanations Endpoint
+### 3 Representative Examples (Markdown Extracts)
 
-`POST /api/explanations/gemini`
+Here are representative output examples of what Sift returns when searching via the website (values and results approximate live behavior):
 
-Send top repos with their deterministic explanations. Returns polished versions if `GEMINI_API_KEY` is configured.
+#### Example 1
+
+**Query:** orm para python
+**Language:** python
+
+**Top 5 repositories**
+
+1. sqlalchemy/sqlalchemy — Score: 92
+- **URL:** https://github.com/sqlalchemy/sqlalchemy
+- **Last activity:** 2 days ago
+- **Stars:** 11400
+
+**Why this repo:**
+Excellent match for orm with high authority and solid maintenance.
+- Strong community adoption.
+- Recognized ecosystem library.
+
+#### Example 2
+
+**Query:** como edito pdfs en python
+**Language:** python
+
+**Top 5 repositories**
+
+1. py-pdf/pypdf — Score: 87
+- **URL:** https://github.com/py-pdf/pypdf
+- **Last activity:** 12 days ago
+- **Stars:** 7300
+
+**Why this repo:**
+Excellent match for pdf with high authority and solid maintenance.
+- Good documentation available.
+- Highly relevant to query terms.
+
+#### Example 3
+
+**Query:** jwt auth
+**Language:** python
+
+**Top 5 repositories**
+
+1. jpadilla/pyjwt — Score: 85
+- **URL:** https://github.com/jpadilla/pyjwt
+- **Last activity:** 28 days ago
+- **Stars:** 5400
+
+**Why this repo:**
+Excellent match for jwt-auth with high authority and solid maintenance.
+- Recognized ecosystem library.
+- Highly relevant to query terms.
+
 
 ## Known Limitations & Tradeoffs
 

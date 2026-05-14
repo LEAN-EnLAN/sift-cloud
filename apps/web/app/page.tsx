@@ -394,6 +394,12 @@ export default function HomePage() {
                           <span className="shrink-0 text-amber-500/50">⚠</span> {repo.explanation.caveats[0]}
                         </div>
                       )}
+                      {(repo.explanation as any)?.isGemini !== undefined && (
+                        <div className="text-[10px] text-zinc-500 mt-2 flex items-center gap-1 opacity-60">
+                           <span className="w-1.5 h-1.5 rounded-full bg-[#22F5A7]/40"></span> 
+                           {(repo.explanation as any).isGemini ? "Explanation rewritten with Gemini" : "Deterministic explanation"}
+                        </div>
+                      )}
                     </div>
                   )}
                   {!repo.explanation && repo.score?.reasons && repo.score.reasons.length > 0 && (

@@ -5,6 +5,7 @@ import { scoreRepo, type ScoredRepoResult, SCORING_WEIGHTS, MAX_RISK_PENALTY, ex
 import { mapRepo } from '../../../lib/map-repo';
 import { extractFeaturesForRepo } from '../../../lib/features/extract-repo-features';
 import { getGithubAuthInfo } from '../../../lib/github/get-github-auth-token';
+import { explainWithGemini } from '../../../lib/ai/explain-with-gemini';
 import { Octokit } from 'octokit';
 
 export const runtime = "nodejs";
@@ -187,11 +188,49 @@ export async function GET(request: Request) {
     const explainedRepos = scoredRepos.map(repo => {
       try {
         const explanation = explainRepo(repo, understanding);
-        return { ...repo, explanation };
+        return { ...repo, explanation: { ...explanation, isGemini: false } };
       } catch (e) {
-        return { ...repo, explanation: { short: "Explanation failed", bullets: [], caveats: [] } };
+        return { ...repo, explanation: { short: "Explanation failed", bullets: [], caveats: [], isGemini: false } };
       }
     });
+
+    const geminiAvailable = !!process.env.GEMINI_API_KEY;
+    let fallbackCount = 0;
+
+    if (geminiAvailable) {
+      for (let i = 0; i < Math.min(5, explainedRepos.length); i++) {
+        const repo = explainedRepos[i];
+        if (repo.explanation) {
+          try {
+            // Apply a timeout of 6 seconds per call to avoid latency spikes
+            const geminiPromise = explainWithGemini({
+              fullName: repo.fullName,
+              query,
+              language,
+              scoreTotal: repo.score.total,
+              scoreParts: repo.score.parts,
+              description: repo.description,
+              stars: repo.stars || repo.features?.community?.stars || 0,
+              license: repo.features?.maintenance?.license,
+              daysSinceLastCommit: repo.features?.activity?.daysSinceLastCommit,
+              contributors: repo.features?.community?.contributorsCount || 0,
+              deterministicExplanation: repo.explanation,
+            });
+            
+            const timeoutPromise = new Promise<null>((resolve) => setTimeout(() => resolve(null), 6000));
+            const geminiExpl = await Promise.race([geminiPromise, timeoutPromise]);
+            
+            if (geminiExpl) {
+              repo.explanation = geminiExpl;
+            } else {
+              fallbackCount++;
+            }
+          } catch (err) {
+             fallbackCount++;
+          }
+        }
+      }
+    }
 
     let comparison = undefined;
     try {
@@ -217,6 +256,11 @@ export async function GET(request: Request) {
           scoring: {
             weights: { ...SCORING_WEIGHTS, riskPenalty: -MAX_RISK_PENALTY },
             rankedCount: explainedRepos.length
+          },
+          explanations: {
+            mode: geminiAvailable ? "gemini" : "deterministic",
+            geminiAvailable,
+            fallbackCount
           },
           rateLimit: rateLimitInfo.hit ? rateLimitInfo : undefined
         },

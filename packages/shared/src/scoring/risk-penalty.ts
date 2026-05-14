@@ -27,8 +27,8 @@ export function scoreRiskPenalty(
     }
 
     if (risk.isLikelyToyProject) {
-      penalty += 18;
-      warnings.push("Likely tutorial/demo/full-stack project");
+      penalty += 10;
+      warnings.push("Likely tutorial/demo project");
     }
 
     if (risk.isLikelyAwesomeList) {
@@ -37,6 +37,7 @@ export function scoreRiskPenalty(
     }
   }
 
+  // Feature warnings
   if (repo.featureWarnings && repo.featureWarnings.length > 0) {
     const warningsCount = repo.featureWarnings.length;
     const wfScore = clamp(warningsCount * 2, 3, 8);

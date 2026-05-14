@@ -19,6 +19,7 @@
   },
   "packageManager": "npm@10.9.7",
   "dependencies": {
+    "@google/genai": "^2.2.0",
     "@tailwindcss/postcss": "^4.3.0",
     "eslint": "^9.39.4",
     "eslint-config-next": "^16.2.6",

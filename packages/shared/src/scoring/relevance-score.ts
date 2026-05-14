@@ -36,7 +36,7 @@ export function scoreRelevance(
       const domainTerms: Record<string, string[]> = {
           "jwt-auth": ["jwt", "auth", "authentication"],
           "pdf": ["pdf"],
-          "orm": ["orm", "database"]
+          "orm": ["orm", "sqlalchemy", "database"]
       };
       
       const termsToCheck = domainTerms[domainLower] || [];
@@ -44,7 +44,7 @@ export function scoreRelevance(
           if (fullNameLower.includes(term)) {
               score += 10;
               matchedName = true;
-              break;
+              break; // give bonus once
           }
       }
   }
@@ -66,7 +66,8 @@ export function scoreRelevance(
     const descLower = repo.description.toLowerCase();
     let descScore = 0;
     
-    const terms = understanding.normalized.toLowerCase().split(/\s+/);
+    // check words in normalized query
+    const terms = understanding.normalized.toLowerCase().split(/\\s+/);
     for (const term of terms) {
       if (term.length > 2 && descLower.includes(term)) {
         descScore += 10;
@@ -86,10 +87,12 @@ export function scoreRelevance(
       reasons.push("Language matches requested language");
     }
   } else if (!requestedLanguage) {
+      // no language requested, give free points to avoid dragging score down
       score += 5;
   }
 
   // 5. Domain Match Score (up to 10)
+  // Since we don't have topics fully extracted yet, give a baseline if domain is identified.
   if (validDomainMatch) {
       score += 10;
   }

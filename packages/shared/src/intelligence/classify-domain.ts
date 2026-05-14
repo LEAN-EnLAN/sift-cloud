@@ -4,7 +4,7 @@ const domainScores: Record<Exclude<ClassifiedDomain, "general">, string[]> = {
   pdf: ["pdf", "document", "ocr", "pdfs"],
   "jwt-auth": ["jwt", "token", "bearer", "jsonwebtoken"],
   auth: ["auth", "authentication", "login", "oauth", "autenticacion", "passport"],
-  orm: ["orm", "database", "prisma", "activerecord", "querybuilder", "sql"],
+  orm: ["orm", "database", "sqlalchemy", "prisma", "activerecord", "querybuilder", "sql"],
   boilerplate: ["boilerplate", "starter", "template", "scaffold", "kit"],
   scraping: ["scraping", "scraper", "crawler", "spider", "bs4", "puppeteer", "playwright"],
   testing: ["testing", "test", "jest", "pytest", "cypress", "mocha", "pruebas", "e2e"],

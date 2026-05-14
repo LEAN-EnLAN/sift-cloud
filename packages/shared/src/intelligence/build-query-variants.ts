@@ -7,7 +7,7 @@ import { selectSeeds } from "./select-seeds.js";
 import { scoreVariants } from "./score-variants.js";
 
 const domainExpansions: Record<string, string[]> = {
-  pdf: ["processing", "manipulation"],
+  pdf: ["processing", "manipulation", "library", "package"],
   "jwt-auth": ["authentication", "security"],
   orm: ["database", "mapping"],
   auth: ["security", "login"],
@@ -17,6 +17,12 @@ const domainExpansions: Record<string, string[]> = {
 interface VariantOptions {
   query: string;
   language?: string;
+}
+
+function looksLikeLibraryIntent(query: string, keywords: string[]): boolean {
+  const lower = query.toLowerCase();
+  const libSignals = ["library", "package", "module", "sdk", "toolkit", "implementation", "auth", "jwt", "orm", "pdf", "cache"];
+  return libSignals.some(s => lower.includes(s)) || keywords.some(k => ["jwt", "orm", "pdf", "auth", "cache"].includes(k));
 }
 
 export function buildQueryVariants({ query, language }: VariantOptions): QueryUnderstanding {
@@ -39,7 +45,7 @@ export function buildQueryVariants({ query, language }: VariantOptions): QueryUn
     coreKeywords.push(...filteredKeywords);
   }
 
-  // 3. Seeds
+  // 3. Seeds - neutral only
   const { selectedSeeds, rejectedSeeds, reasoning: seedReasoning } = selectSeeds(domain, confidence);
 
   const rawVariants = new Set<string>();
@@ -47,6 +53,7 @@ export function buildQueryVariants({ query, language }: VariantOptions): QueryUn
   const baseSuffix = `fork:false archived:false`;
   const suffix = [langSuffix, baseSuffix].filter(Boolean).join(" ");
 
+  // Neutral domain variants
   for (const seed of selectedSeeds) {
     rawVariants.add(`${seed} ${coreKeywords.join(" ")} ${suffix}`.trim().replace(/\s+/g, ' '));
   }
@@ -58,12 +65,21 @@ export function buildQueryVariants({ query, language }: VariantOptions): QueryUn
     }
   }
 
-  // Focused canonical library variants for PDF
+  // Neutral PDF intent variants (no package names)
   if (domain === "pdf" && language?.toLowerCase() === "python") {
-    rawVariants.add(`pymupdf pdf ${suffix}`.trim().replace(/\s+/g, ' '));
-    rawVariants.add(`pypdf pdf ${suffix}`.trim().replace(/\s+/g, ' '));
-    rawVariants.add(`pdfminer pdf ${suffix}`.trim().replace(/\s+/g, ' '));
-    rawVariants.add(`pdf manipulation ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`pdf library ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`pdf manipulation package ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`pdf processing library ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`document extraction pdf ${suffix}`.trim().replace(/\s+/g, ' '));
+    rawVariants.add(`topic:pdf ${suffix}`.trim().replace(/\s+/g, ' '));
+  }
+
+  // Generic library-oriented terms when intent looks library-like
+  if (looksLikeLibraryIntent(query, keywords) && confidence > 0.5) {
+    const libTerms = ["library", "package", "toolkit", "module", "sdk", "implementation"];
+    for (const term of libTerms) {
+      rawVariants.add(`${coreKeywords.slice(0, 2).join(" ")} ${term} ${suffix}`.trim().replace(/\s+/g, ' '));
+    }
   }
 
   if (domain !== "general" && confidence > 0.6) {
@@ -81,7 +97,7 @@ export function buildQueryVariants({ query, language }: VariantOptions): QueryUn
 
   // 4. Scoring
   const variants = scoreVariants(Array.from(rawVariants), coreKeywords, selectedSeeds)
-    .slice(0, 5); // top 5
+    .slice(0, 5);
 
   return {
     original: query,

@@ -43,6 +43,7 @@ export type RepoRiskFeatures = {
   isTemplate: boolean;
   isLikelyToyProject: boolean;
   isLikelyAwesomeList: boolean;
+  isTutorial?: boolean;
 };
 
 export type RepoFeatures = {

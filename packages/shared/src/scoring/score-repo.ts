@@ -12,6 +12,11 @@ import { scoreRiskPenalty } from './risk-penalty.js';
 import { clamp, roundScore } from './utils.js';
 import { SCORING_WEIGHTS } from './weights.js';
 
+function isLibraryIntent(understanding: QueryUnderstanding): boolean {
+  const domain = understanding.domain;
+  return domain !== 'general' && domain !== undefined;
+}
+
 export function scoreRepo(params: {
   repo: RepoResult;
   understanding: QueryUnderstanding;
@@ -19,9 +24,12 @@ export function scoreRepo(params: {
 }): RepoScore {
   const { repo, understanding, requestedLanguage } = params;
   
+  const isLibIntent = isLibraryIntent(understanding);
+  const isTutorial = !!(repo.features?.risk?.isTutorial || repo.features?.risk?.isLikelyToyProject);
+
   const relevance = scoreRelevance(repo, understanding, requestedLanguage);
   const maintenance = scoreMaintenance(repo.features);
-  const documentation = scoreDocumentation(repo.features);
+  const documentation = scoreDocumentation(repo.features, isLibIntent, isTutorial);
   const community = scoreCommunity(repo.features);
   const modernity = scoreModernity(repo, repo.features);
   const authority = scoreAuthority(repo, understanding);
@@ -36,7 +44,6 @@ export function scoreRepo(params: {
     authority.score * SCORING_WEIGHTS.authority - 
     riskPenalty.score;
 
-  // Combine reasons
   const combinedReasons = [
     ...relevance.reasons,
     ...maintenance.reasons,
@@ -44,7 +51,7 @@ export function scoreRepo(params: {
     ...community.reasons,
     ...modernity.reasons,
     ...authority.reasons
-  ]; // deduplicate and limit
+  ];
   const reasons = Array.from(new Set(combinedReasons)).slice(0, 5);
 
   return {

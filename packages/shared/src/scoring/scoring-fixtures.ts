@@ -9,7 +9,7 @@ export const mockUnderstandingPdf: QueryUnderstanding = {
   keywords: ['pdf'],
   filteredKeywords: ['pdf'],
   weightedKeywords: [{ keyword: 'pdf', weight: 1.0, source: 'domain' }],
-  selectedSeeds: ['pymupdf/pymupdf', 'py-pdf/pypdf'],
+  selectedSeeds: ['pdf library', 'document processing'],
   rejectedSeeds: [],
   lexicalWarnings: [],
   variants: []
@@ -23,7 +23,7 @@ export const mockUnderstandingJwt: QueryUnderstanding = {
   keywords: ['jwt'],
   filteredKeywords: ['jwt'],
   weightedKeywords: [{ keyword: 'jwt', weight: 1.0, source: 'domain' }],
-  selectedSeeds: ['jpadilla/pyjwt'],
+  selectedSeeds: ['jwt token'],
   rejectedSeeds: [],
   lexicalWarnings: [],
   variants: []
@@ -49,7 +49,7 @@ function createBaseRepo(id: number, name: string, owner: string): RepoResult {
 }
 
 export const goodPdfLibrary: RepoResult = {
-  ...createBaseRepo(1, 'pypdf', 'py-pdf'),
+  ...createBaseRepo(1, 'pdf-tool', 'exampledev'),
   description: 'A pure-python PDF library capable of splitting, merging, cropping...',
   stars: 8000,
   features: {
@@ -77,7 +77,7 @@ export const toyPdfDemo: RepoResult = {
 };
 
 export const canonicalJwt: RepoResult = {
-  ...createBaseRepo(3, 'pyjwt', 'jpadilla'),
+  ...createBaseRepo(3, 'jwt-lib', 'exampledev'),
   description: 'JSON Web Token implementation in Python',
   features: {
     activity: { daysSinceLastCommit: 10 },
